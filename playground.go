@@ -50,7 +50,15 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 			const urlParams = new URLSearchParams(queryString);
 			const key = urlParams.get('key')
 
-			const finalUrl = key ? url+'?key='+key : url;
+			let finalUrl = url;
+
+			if (key && typeof key !== 'undefined') {
+				if (finalUrl.indexOf('?') > -1) {
+					finalUrl = url + '&key=' + key;
+				} else {
+					finalUrl = url + '?key=' + key;
+				}
+			}
 
 			const fetcher = GraphiQL.createFetcher({ finalUrl, subscriptionUrl });
       ReactDOM.render(
