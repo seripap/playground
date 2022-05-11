@@ -38,10 +38,10 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 
     <script>
 {{- if .endpointIsAbsolute}}
-      const url = {{.endpoint}};
+      const baseUrl = {{.endpoint}};
       const subscriptionUrl = {{.subscriptionEndpoint}};
 {{- else}}
-      const url = location.protocol + '//' + location.host + {{.endpoint}};
+      const baseUrl = location.protocol + '//' + location.host + {{.endpoint}};
       const wsProto = location.protocol == 'https:' ? 'wss:' : 'ws:';
       const subscriptionUrl = wsProto + '//' + location.host + {{.endpoint}};
 {{- end}}
@@ -50,17 +50,17 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 			const urlParams = new URLSearchParams(queryString);
 			const key = urlParams.get('key')
 
-			let finalUrl = url;
+			let url = baseUrl;
 
 			if (key && typeof key !== 'undefined') {
-				if (finalUrl.indexOf('?') > -1) {
-					finalUrl = url + '&key=' + key;
+				if (url.indexOf('?') > -1) {
+					url = baseUrl + '&key=' + key;
 				} else {
-					finalUrl = url + '?key=' + key;
+					url = baseUrl + '?key=' + key;
 				}
 			}
 
-			const fetcher = GraphiQL.createFetcher({ finalUrl, subscriptionUrl });
+			const fetcher = GraphiQL.createFetcher({ url, subscriptionUrl });
       ReactDOM.render(
         React.createElement(GraphiQL, {
           fetcher: fetcher,
