@@ -9,7 +9,30 @@ import (
 var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 <html>
   <head>
-    <title>{{.title}}</title>
+  	<meta charset="utf-8">
+  	<title>{{.title}}</title>
+	<style>
+		body {
+			height: 100%;
+			margin: 0;
+			width: 100%;
+			overflow: hidden;
+		}
+
+		#graphiql {
+			height: 100vh;
+		}
+	</style>
+	<script
+		src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"
+		integrity="{{.reactSRI}}"
+		crossorigin="anonymous"
+	></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"
+		integrity="{{.reactDOMSRI}}"
+		crossorigin="anonymous"
+	></script>
     <link
 		rel="stylesheet"
 		href="https://cdn.jsdelivr.net/npm/graphiql@{{.version}}/graphiql.min.css"
@@ -17,19 +40,9 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 		crossorigin="anonymous"
 	/>
   </head>
-  <body style="margin: 0;">
-    <div id="graphiql" style="height: 100vh;"></div>
+  <body>
+    <div id="graphiql">Loading...</div>
 
-	<script
-		src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"
-		integrity="{{.reactSRI}}"
-		crossorigin="anonymous"
-	></script>
-	<script
-		src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"
-		integrity="{{.reactDOMSRI}}"
-		crossorigin="anonymous"
-	></script>
 	<script
 		src="https://cdn.jsdelivr.net/npm/graphiql@{{.version}}/graphiql.min.js"
 		integrity="{{.jsSRI}}"
@@ -60,12 +73,11 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 				}
 			}
 
-			const fetcher = GraphiQL.createFetcher({ url, subscriptionUrl });
+      const fetcher = GraphiQL.createFetcher({ url, subscriptionUrl, headers });
       ReactDOM.render(
         React.createElement(GraphiQL, {
           fetcher: fetcher,
-          tabs: true,
-          headerEditorEnabled: true,
+          isHeadersEditorEnabled: true,
           shouldPersistHeaders: true
         }),
         document.getElementById('graphiql'),
@@ -77,24 +89,30 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
 
 // Handler responsible for setting up the playground
 func Handler(title string, endpoint string) http.HandlerFunc {
+	return HandlerWithHeaders(title, endpoint, nil)
+}
+
+func HandlerWithHeaders(title string, endpoint string, headers map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "text/html")
+		w.Header().Add("Content-Type", "text/html; charset=UTF-8")
 		err := page.Execute(w, map[string]interface{}{
 			"title":                title,
 			"endpoint":             endpoint,
+			"headers":              headers,
 			"endpointIsAbsolute":   endpointHasScheme(endpoint),
 			"subscriptionEndpoint": getSubscriptionEndpoint(endpoint),
-			"version":              "1.8.2",
-			"cssSRI":               "sha256-CDHiHbYkDSUc3+DS2TU89I9e2W3sJRUOqSmp7JC+LBw=",
-			"jsSRI":                "sha256-X8vqrqZ6Rvvoq4tvRVM3LoMZCQH8jwW92tnX0iPiHPc=",
-			"reactSRI":             "sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8=",
-			"reactDOMSRI":          "sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0=",
+			"version":              "3.0.1",
+			"cssSRI":               "sha256-wTzfn13a+pLMB5rMeysPPR1hO7x0SwSeQI+cnw7VdbE=",
+			"jsSRI":                "sha256-dLnxjV+d2rFUCtYKjbPy413/8O+Ahy7QqAhaPNlL8fk=",
+			"reactSRI":             "sha256-S0lp+k7zWUMk2ixteM6HZvu8L9Eh//OVrt+ZfbCpmgY=",
+			"reactDOMSRI":          "sha256-IXWO0ITNDjfnNXIu5POVfqlgYoop36bDzhodR6LW5Pc=",
 		})
 		if err != nil {
 			panic(err)
 		}
 	}
 }
+
 
 // endpointHasScheme checks if the endpoint has a scheme.
 func endpointHasScheme(endpoint string) bool {
