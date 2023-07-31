@@ -58,6 +58,11 @@ var page = template.Must(template.New("graphiql").Parse(`<!DOCTYPE html>
       const wsProto = location.protocol == 'https:' ? 'wss:' : 'ws:';
       const subscriptionUrl = wsProto + '//' + location.host + {{.endpoint}};
 {{- end}}
+{{- if .headers}}
+      const headers = {{.headers}};
+{{- else}}
+      const headers = undefined;
+{{- end}}
 
 			const queryString = window.location.search;
 			const urlParams = new URLSearchParams(queryString);
